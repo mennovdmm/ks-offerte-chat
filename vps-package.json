@@ -1,0 +1,25 @@
+{
+  "name": "ks-streaming-api",
+  "version": "1.0.0",
+  "description": "VPS Express server for K&S Offerte Chat streaming API",
+  "main": "vps-express-server.js",
+  "scripts": {
+    "start": "node vps-express-server.js",
+    "dev": "nodemon vps-express-server.js",
+    "pm2:start": "pm2 start vps-express-server.js --name ks-streaming-api",
+    "pm2:restart": "pm2 restart ks-streaming-api",
+    "pm2:stop": "pm2 stop ks-streaming-api",
+    "pm2:logs": "pm2 logs ks-streaming-api"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

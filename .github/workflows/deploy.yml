@@ -73,13 +73,16 @@ jobs:
           sudo cp -r build/* /var/www/ai.dehuisraad.com/
           sudo chown -R www-data:www-data /var/www/ai.dehuisraad.com
           
-          # Update backend if needed
-          cd /root/ks-streaming-api
-          pm2 restart ks-streaming-api
+          # Deploy VPS Express server
+          echo "🚀 Deploying VPS Express server..."
+          chmod +x /tmp/ks-offerte-chat/deploy-to-vps.sh
           
-          # Wait for backend to start
-          echo "Waiting for backend to start..."
-          sleep 10
+          # Set environment variables for deployment script
+          export LANGFLOW_API_URL="${{ secrets.LANGFLOW_API_URL }}"
+          export LANGFLOW_API_KEY="${{ secrets.LANGFLOW_API_KEY }}"
+          
+          # Run deployment script
+          /tmp/ks-offerte-chat/deploy-to-vps.sh
           
           # Test deployment with retries
           for i in {1..5}; do
