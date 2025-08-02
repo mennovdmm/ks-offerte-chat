@@ -64,3 +64,4 @@ npm run build
 - ✅ SSH keys and secrets setup  
 - ✅ VPS deployment target ready
 - 🚀 **Ready for `git push` = instant deploy!**Deploy test
+Deploy test
