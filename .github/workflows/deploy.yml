@@ -77,8 +77,25 @@ jobs:
           cd /root/ks-streaming-api
           pm2 restart ks-streaming-api
           
-          # Test deployment
-          curl -f https://ai.dehuisraad.com/api/health || exit 1
+          # Wait for backend to start
+          echo "Waiting for backend to start..."
+          sleep 10
+          
+          # Test deployment with retries
+          for i in {1..5}; do
+            echo "Health check attempt $i/5..."
+            if curl -f https://ai.dehuisraad.com/api/health; then
+              echo "✅ Health check passed!"
+              break
+            else
+              echo "❌ Health check failed, waiting..."
+              if [ $i -eq 5 ]; then
+                echo "❌ All health checks failed"
+                exit 1
+              fi
+              sleep 5
+            fi
+          done
           
           echo "🚀 Deployment successful!"
     
