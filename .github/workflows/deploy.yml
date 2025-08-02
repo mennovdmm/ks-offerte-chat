@@ -90,6 +90,11 @@ jobs:
           chmod +x /tmp/ks-offerte-chat/emergency-server-fix.sh
           /tmp/ks-offerte-chat/emergency-server-fix.sh
           
+          # CRITICAL: Fix environment variables (they were empty in previous deployment)
+          echo "🚨 CRITICAL: Fixing environment variables..."
+          chmod +x /tmp/ks-offerte-chat/fix-env-variables.sh
+          /tmp/ks-offerte-chat/fix-env-variables.sh
+          
           # Test deployment with retries
           for i in {1..5}; do
             echo "Health check attempt $i/5..."
