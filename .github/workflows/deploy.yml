@@ -95,6 +95,11 @@ jobs:
           chmod +x /tmp/ks-offerte-chat/fix-env-variables.sh
           /tmp/ks-offerte-chat/fix-env-variables.sh
           
+          # EMERGENCY: Fix server crash caused by debug logging syntax error
+          echo "🚨 EMERGENCY: Fixing server crash from debug logging..."
+          chmod +x /tmp/ks-offerte-chat/fix-server-crash.sh
+          /tmp/ks-offerte-chat/fix-server-crash.sh
+          
           # Test deployment with retries
           for i in {1..5}; do
             echo "Health check attempt $i/5..."
