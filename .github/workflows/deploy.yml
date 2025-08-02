@@ -26,6 +26,14 @@ jobs:
     - name: Build React app
       run: npm run build
       
+    - name: Debug secrets
+      run: |
+        echo "Host: ${{ secrets.VPS_HOST }}"
+        echo "User: ${{ secrets.VPS_USER }}"
+        echo "Key length: ${#VPS_SSH_KEY}"
+      env:
+        VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
       with:
@@ -33,6 +41,7 @@ jobs:
         username: ${{ secrets.VPS_USER }}
         key: ${{ secrets.VPS_SSH_KEY }}
         port: 22
+        debug: true
         script_stop: false
         script: |
           # Create backup of current site
