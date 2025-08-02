@@ -105,6 +105,11 @@ jobs:
           chmod +x /tmp/ks-offerte-chat/safe-debug-fix.sh
           /tmp/ks-offerte-chat/safe-debug-fix.sh
           
+          # DIAGNOSTIC: Generate complete VPS analysis report
+          echo "🔍 DIAGNOSTIC: Generating complete VPS server analysis..."
+          chmod +x /tmp/ks-offerte-chat/vps-diagnostic.sh
+          /tmp/ks-offerte-chat/vps-diagnostic.sh
+          
           # FINAL SERVER FIX: Deploy correct server once and for all
           echo "🎯 FINAL SERVER FIX: Deploying correct server with /api/chat endpoint..."
           chmod +x /tmp/ks-offerte-chat/fix-server-once.sh
