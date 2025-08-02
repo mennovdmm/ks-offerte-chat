@@ -676,6 +676,7 @@ function App() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sendMessageOld = async (content: string, files?: File[]) => {
     // Old non-streaming implementation kept as fallback
     if (!content.trim()) {
