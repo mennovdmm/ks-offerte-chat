@@ -9,10 +9,19 @@ sudo mkdir -p /var/www/ai.dehuisraad.com
 sudo mkdir -p /root/ks-mobile-chat
 sudo chown -R www-data:www-data /var/www/ai.dehuisraad.com
 
-# Copy server files to VPS location
-echo "📋 Copying server files..."
-cp server/express-server.js /root/ks-mobile-chat/
-cp server/package.json /root/ks-mobile-chat/
+# Copy server files to VPS location (OVERWRITE OLD SERVER)
+echo "📋 Copying NEW mobile server files..."
+sudo mkdir -p /root/ks-mobile-chat
+cp server/express-server.js /root/ks-mobile-chat/server.js
+cp server/package.json /root/ks-mobile-chat/package.json
+
+# CRITICAL: Stop old ks-streaming-api process
+echo "🛑 Stopping old ks-streaming-api process..."
+pm2 delete ks-streaming-api 2>/dev/null || true
+
+# CRITICAL: Remove old server directory
+echo "🗑️ Cleaning old server files..."
+sudo rm -f /root/ks-streaming-api/server.js 2>/dev/null || true
 
 # Install server dependencies
 echo "📦 Installing server dependencies..."
@@ -35,28 +44,30 @@ sudo chown -R www-data:www-data /var/www/ai.dehuisraad.com
 echo "⚙️ Setting up PM2..."
 cd /root/ks-mobile-chat
 
-# Create PM2 ecosystem file
+# Create PM2 ecosystem file with hardcoded Langflow credentials
 cat > ecosystem.config.js << 'EOF'
 module.exports = {
   apps: [{
     name: 'ks-mobile-chat',
-    script: 'express-server.js',
+    script: 'server.js',
     instances: 1,
     autorestart: true,
     watch: false,
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3001
+      PORT: 3001,
+      LANGFLOW_API_URL: 'https://langflow-ogonline-v2-u36305.vm.elestio.app/api/v1/run/62f396d2-3e45-4265-b10c-b18a63cd2b07',
+      LANGFLOW_API_KEY: 'sk-f2GOmzmTYjXiH1msLR_RQMihxGQEHBW1lZrE2SVnluQ'
     }
   }]
 };
 EOF
 
-# Stop existing PM2 processes
-echo "🛑 Stopping existing processes..."
-pm2 stop ks-mobile-chat 2>/dev/null || true
-pm2 delete ks-mobile-chat 2>/dev/null || true
+# Stop ALL existing PM2 processes
+echo "🛑 Stopping ALL existing processes..."
+pm2 stop all 2>/dev/null || true
+pm2 delete all 2>/dev/null || true
 
 # Start new PM2 process
 echo "▶️ Starting new PM2 process..."
@@ -123,6 +134,15 @@ if curl -f https://ai.dehuisraad.com/api/health; then
     echo "✅ Public health check passed!"
 else
     echo "❌ Public health check failed!"
+    exit 1
+fi
+
+echo "🧪 Testing NEW chat endpoint..."
+if curl -X POST https://ai.dehuisraad.com/api/chat -H "Content-Type: application/json" -d '{"message":"production deployment test"}'; then
+    echo "✅ Chat endpoint working!"
+else
+    echo "❌ Chat endpoint failed!"
+    exit 1
 fi
 
 echo "🎉 Clean VPS deployment completed!"
