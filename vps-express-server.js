@@ -6,106 +6,184 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Import the langflow handler function
-const { handler: langflowHandler } = require('./langflow-chat-for-vps');
-
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, 'build')));
+// Serve static files from React build (React app lives in /var/www/ai.dehuisraad.com)
+// This is just the API server
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'healthy', 
     timestamp: new Date().toISOString(),
-    service: 'ks-streaming-api'
+    service: 'ks-streaming-api',
+    port: PORT
   });
 });
 
-// Main Langflow streaming endpoint
+// Simple health check for root
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    service: 'ks-streaming-api',
+    port: PORT
+  });
+});
+
+// Main Langflow streaming endpoint with EXACT response format from briefing
 app.post('/api/langflow-stream', async (req, res) => {
-  console.log('🚀 EXPRESS: /api/langflow-stream endpoint called');
-  console.log('🚀 EXPRESS: Request body:', JSON.stringify(req.body, null, 2));
+  console.log('🚀 VPS EXPRESS: /api/langflow-stream endpoint called');
+  console.log('🚀 VPS EXPRESS: Request body:', JSON.stringify(req.body, null, 2));
   
   try {
-    // Convert Express request to Netlify function format
-    const event = {
-      httpMethod: 'POST',
-      body: JSON.stringify(req.body),
-      headers: req.headers,
-      queryStringParameters: req.query
-    };
+    const { message, sessionId, uploadedFiles, currentUser } = req.body;
     
-    const context = {
-      callbackWaitsForEmptyEventLoop: false
-    };
-    
-    console.log('🔄 EXPRESS: Calling langflow handler...');
-    
-    // Call the langflow handler
-    const result = await langflowHandler(event, context);
-    
-    console.log('✅ EXPRESS: Handler response:', {
-      statusCode: result.statusCode,
-      hasBody: !!result.body,
-      bodyLength: result.body ? result.body.length : 0
-    });
-    
-    // Send response
-    res.status(result.statusCode);
-    
-    // Set headers
-    if (result.headers) {
-      Object.keys(result.headers).forEach(key => {
-        res.set(key, result.headers[key]);
+    console.log('📥 VPS: Received message:', message?.substring(0, 100));
+    console.log('📥 VPS: Session ID:', sessionId);
+    console.log('📥 VPS: User:', currentUser?.name);
+
+    // Don't send empty messages
+    if (!message || message.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        error: 'Empty message',
+        message: 'Typ een bericht om te beginnen.'
       });
     }
-    
-    // Send body
-    if (result.body) {
-      if (result.headers && result.headers['Content-Type'] === 'application/json') {
-        res.json(JSON.parse(result.body));
-      } else {
-        res.send(result.body);
+
+    // Prepare Langflow payload
+    const langflowPayload = {
+      input_value: message,
+      output_type: 'chat',
+      input_type: 'chat',
+      session_id: sessionId,
+      user_name: currentUser?.name || '',
+      user_email: currentUser?.email || '',
+      tweaks: {
+        currentUser: currentUser ? JSON.stringify(currentUser) : "",
+        userName: currentUser?.name || "",
+        userEmail: currentUser?.email || "",
+        uploadedFiles: uploadedFiles && uploadedFiles.length > 0 ? JSON.stringify(uploadedFiles) : ""
       }
-    } else {
-      res.end();
+    };
+
+    console.log('🚀 VPS: Calling Langflow API...');
+    
+    // Call Langflow with extended timeout
+    const langflowResponse = await fetch(process.env.LANGFLOW_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.LANGFLOW_API_KEY
+      },
+      body: JSON.stringify(langflowPayload),
+      signal: AbortSignal.timeout(300000) // 5 minute timeout - NO LIMITS!
+    });
+
+    if (!langflowResponse.ok) {
+      throw new Error(`Langflow API error: ${langflowResponse.status}`);
     }
+
+    const langflowData = await langflowResponse.json();
+    console.log('✅ VPS: Got Langflow response');
+
+    // Parse response and extract AI message
+    let aiMessage = 'Ik heb je bericht ontvangen. Laten we verder gaan met je offerte.';
+    let pdfUrl = null;
+
+    if (langflowData.outputs && langflowData.outputs.length > 0) {
+      const output = langflowData.outputs[0];
+      
+      if (output.outputs && output.outputs.length > 0) {
+        // Extract PDF URLs
+        for (const outputItem of output.outputs) {
+          if (outputItem.component_display_name && 
+              outputItem.component_display_name.toLowerCase().includes('pdf')) {
+            if (outputItem.outputs && outputItem.outputs.length > 0) {
+              for (const pdfOutput of outputItem.outputs) {
+                if (typeof pdfOutput === 'string' && pdfOutput.includes('http')) {
+                  pdfUrl = pdfOutput;
+                  console.log('📄 VPS: Found PDF URL:', pdfUrl);
+                  break;
+                }
+              }
+            }
+          }
+        }
+        
+        // Extract AI messages
+        for (const outputItem of output.outputs) {
+          if (outputItem.component_display_name && 
+              (outputItem.component_display_name.toLowerCase().includes('pdf') ||
+               outputItem.component_display_name.toLowerCase().includes('file') ||
+               outputItem.component_display_name.toLowerCase().includes('tool'))) {
+            continue;
+          }
+          
+          if (outputItem.messages && outputItem.messages.length > 0) {
+            const firstMessage = outputItem.messages[0];
+            if (firstMessage.message && typeof firstMessage.message === 'string') {
+              aiMessage = firstMessage.message;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // EXACT RESPONSE FORMAT FROM YOUR BRIEFING
+    const responseData = {
+      "success": true,
+      "messageLength": aiMessage.length,
+      "hasError": false,
+      "isBackgroundTask": false,
+      "messageParts": [
+        {
+          "text": aiMessage,
+          "type": "text"
+        }
+      ],
+      // PLUS backup fields voor frontend safety:
+      "message": aiMessage,
+      "content": aiMessage,
+      "pdfUrl": pdfUrl,
+      "streaming": true
+    };
+    
+    console.log('🎯 VPS: Sending response:', {
+      success: responseData.success,
+      messageLength: responseData.messageLength,
+      hasMessageParts: !!responseData.messageParts,
+      hasPdf: !!responseData.pdfUrl
+    });
+
+    res.json(responseData);
     
   } catch (error) {
-    console.error('❌ EXPRESS: Error in langflow endpoint:', error);
+    console.error('❌ VPS EXPRESS: Error:', error);
+    
     res.status(500).json({
+      success: false,
       error: 'Internal server error',
-      message: error.message,
-      success: false
+      message: `Er is een fout opgetreden: ${error.message}`,
+      messageLength: 0,
+      hasError: true,
+      isBackgroundTask: false,
+      messageParts: []
     });
   }
 });
 
-// Catch all handler: send back React's index.html file for client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  console.error('❌ EXPRESS: Unhandled error:', error);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: error.message,
-    success: false
-  });
-});
-
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 EXPRESS: Server running on port ${PORT}`);
-  console.log(`🚀 EXPRESS: Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🚀 EXPRESS: Langflow endpoint: http://localhost:${PORT}/api/langflow-stream`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 VPS EXPRESS: Server running on port ${PORT}`);
+  console.log(`🚀 VPS EXPRESS: Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🚀 VPS EXPRESS: Langflow endpoint: http://localhost:${PORT}/api/langflow-stream`);
+  console.log(`🔥 VPS EXPRESS: NO TIMEOUT LIMITS - 300 second processing time!`);
 });
 
 module.exports = app;
