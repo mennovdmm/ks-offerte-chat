@@ -110,9 +110,10 @@ NGINX_CONFIG
           export LANGFLOW_API_URL="${{ secrets.LANGFLOW_API_URL }}"
           export LANGFLOW_API_KEY="${{ secrets.LANGFLOW_API_KEY }}"
           
-          # Run emergency deployment script to force correct server version
-          echo "🚨 Running emergency deployment to fix langflow-stream endpoint..."
-          /tmp/ks-offerte-chat/force-deploy.sh
+          # Run emergency deployment script to fix langflow-stream endpoint
+          echo "🚨 Running emergency server fix for endpoints and nginx..."
+          chmod +x /tmp/ks-offerte-chat/emergency-server-fix.sh
+          /tmp/ks-offerte-chat/emergency-server-fix.sh
           
           # Test deployment with retries
           for i in {1..5}; do
