@@ -75,17 +75,19 @@ else
     exit 1
 fi
 
-# Setup nginx configuration (if not exists)
+# Setup nginx configuration (force update)
 echo "🌐 Setting up nginx configuration..."
-if ! grep -q "location /api/" /etc/nginx/sites-available/ai.dehuisraad.com 2>/dev/null; then
-    echo "⚠️ Adding nginx API proxy configuration..."
-    
-    # Add API proxy location block
-    sudo tee -a /etc/nginx/sites-available/ai.dehuisraad.com > /dev/null << 'EOF'
+echo "⚠️ Updating nginx API proxy configuration..."
+
+# Remove old API proxy configuration if exists
+sudo sed -i '/# API Proxy/,/^    }/d' /etc/nginx/sites-available/ai.dehuisraad.com 2>/dev/null || true
+
+# Add corrected API proxy location block
+sudo tee -a /etc/nginx/sites-available/ai.dehuisraad.com > /dev/null << 'EOF'
 
     # API Proxy for mobile chat
     location /api/ {
-        proxy_pass http://127.0.0.1:3001;
+        proxy_pass http://127.0.0.1:3001/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -94,9 +96,9 @@ if ! grep -q "location /api/" /etc/nginx/sites-available/ai.dehuisraad.com 2>/de
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
     }
 EOF
     

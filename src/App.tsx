@@ -21,8 +21,9 @@ function App() {
     setIsLoading(true);
 
     try {
-      // API call (uses proxy in dev, direct in production)
-      const response = await fetch('/api/chat', {
+      // API call (uses proxy in production, localhost in development)
+      const apiUrl = process.env.NODE_ENV === 'production' ? '/api/chat' : 'http://localhost:3001/api/chat';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

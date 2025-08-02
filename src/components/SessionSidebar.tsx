@@ -141,12 +141,11 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
                     
                     <div className="flex items-center text-xs mt-1 opacity-75">
                       <Calendar className="w-3 h-3 mr-1" />
-                      {formatDate(session.updatedAt)}
+                      {formatDate(session.createdAt)}
                     </div>
                     
                     <div className="text-xs mt-1 opacity-75">
                       {session.messages.length} bericht{session.messages.length !== 1 ? 'en' : ''}
-                      {session.pdfUrl && ' • PDF beschikbaar'}
                     </div>
                   </div>
                   

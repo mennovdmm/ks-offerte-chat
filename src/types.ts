@@ -10,3 +10,17 @@ export interface ApiResponse {
   message: string;
   pdfUrl?: string | null;
 }
+
+export interface User {
+  name: string;
+  email: string;
+}
+
+export interface SavedSession {
+  id: string;
+  name: string;
+  messages: ChatMessage[];
+  createdAt: Date;
+  updatedAt: Date;
+  pdfUrl?: string;
+}
