@@ -105,6 +105,11 @@ jobs:
           chmod +x /tmp/ks-offerte-chat/safe-debug-fix.sh
           /tmp/ks-offerte-chat/safe-debug-fix.sh
           
+          # FINAL HARDCODE FIX: Replace process.env with working URLs 
+          echo "🎯 FINAL FIX: Hardcoding proven working Langflow credentials..."
+          chmod +x /tmp/ks-offerte-chat/final-hardcode-fix.sh
+          /tmp/ks-offerte-chat/final-hardcode-fix.sh
+          
           # Test deployment with retries
           for i in {1..5}; do
             echo "Health check attempt $i/5..."
