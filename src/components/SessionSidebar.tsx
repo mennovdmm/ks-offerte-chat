@@ -65,18 +65,18 @@ const SessionSidebar: React.FC<SessionSidebarProps> = ({
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-80 md:w-80 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg md:shadow-none">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-          <FileText className="w-5 h-5 mr-2" />
-          Gemaakte Offertes
+      <div className="p-3 md:p-4 border-b border-gray-200">
+        <h2 className="text-base md:text-lg font-semibold text-gray-800 flex items-center">
+          <FileText className="w-4 md:w-5 h-4 md:h-5 mr-2" />
+          Offertes
         </h2>
       </div>
       
       {/* Current Session */}
-      <div className="p-4 bg-ks-light-green border-b border-gray-200">
-        <div className="text-sm text-gray-600 mb-1">Huidige offerte:</div>
+      <div className="p-3 md:p-4 bg-ks-light-green border-b border-gray-200">
+        <div className="text-xs md:text-sm text-gray-600 mb-1">Huidige offerte:</div>
         <div className="flex items-center justify-between">
           {editingSessionId === currentSessionId ? (
             <input

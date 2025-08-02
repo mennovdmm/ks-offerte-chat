@@ -115,8 +115,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled }) => {
         </div>
       )}
       
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex items-end gap-3 p-4">
+      {/* Input Form - Mobile Responsive */}
+      <form onSubmit={handleSubmit} className="flex items-end gap-2 md:gap-3 p-3 md:p-4">
         <input
           type="file"
           ref={fileInputRef}
@@ -130,7 +130,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled }) => {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="text-gray-500 hover:text-ks-green disabled:opacity-50 self-end mb-1 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="text-gray-500 hover:text-ks-green disabled:opacity-50 self-end mb-1 p-2 rounded-lg hover:bg-gray-100 transition-colors touch-manipulation"
           title="Bestand toevoegen"
         >
           <Paperclip className="w-5 h-5" />
@@ -142,13 +142,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled }) => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type een bericht... (Shift+Enter voor nieuwe regel)"
+            placeholder="Type een bericht..."
             disabled={disabled}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-ks-green focus:border-transparent disabled:opacity-50 text-base leading-relaxed"
-            rows={3}
+            className="w-full px-3 md:px-4 py-2 md:py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-ks-green focus:border-transparent disabled:opacity-50 text-base leading-relaxed touch-manipulation"
+            rows={2}
             style={{ 
-              minHeight: '80px',
-              maxHeight: '200px',
+              minHeight: '60px',
+              maxHeight: '160px',
               resize: 'none',
               overflow: 'auto',
             }}
@@ -158,8 +158,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled }) => {
         <button
           type="submit"
           disabled={disabled || (!message.trim() && selectedFiles.length === 0)}
-          className="bg-ks-green text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end mb-1"
-          style={{ minHeight: '40px', minWidth: '40px' }}
+          className="bg-ks-green text-white px-3 md:px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end mb-1 touch-manipulation"
+          style={{ minHeight: '44px', minWidth: '44px' }}
         >
           <Send className="w-5 h-5" />
         </button>

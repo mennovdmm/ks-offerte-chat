@@ -55,8 +55,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-ks-light-green flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen bg-ks-light-green flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 md:p-8">
         {/* Company Logo */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
@@ -93,7 +93,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ks-green focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ks-green focus:border-transparent text-base touch-manipulation"
               placeholder="naam@keij-stefels.nl"
             />
           </div>
@@ -108,7 +108,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ks-green focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-ks-green focus:border-transparent text-base touch-manipulation"
               placeholder="Voer je wachtwoord in"
             />
           </div>
@@ -122,7 +122,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-ks-green text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+            className="w-full bg-ks-green text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-base touch-manipulation"
           >
             {isLoading ? 'Inloggen...' : 'Inloggen'}
           </button>

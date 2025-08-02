@@ -35,13 +35,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-100">
+      {/* Messages Area - Mobile Responsive */}
+      <div className="flex-1 overflow-y-auto p-3 md:p-6 space-y-3 md:space-y-4 bg-gray-100">
         {messages.length === 0 && (
-          <div className="text-center text-gray-500 mt-8">
-            <h3 className="text-lg font-medium mb-2">Welkom bij Keij & Stefels Offerte Chat</h3>
-            <p>Begin een gesprek om je offerte op te bouwen. Bijvoorbeeld:</p>
-            <p className="italic mt-2">"Ik wil een offerte maken voor Mauvestraat 43"</p>
+          <div className="text-center text-gray-500 mt-4 md:mt-8 px-4">
+            <h3 className="text-base md:text-lg font-medium mb-2">Welkom bij K&S Offerte Chat</h3>
+            <p className="text-sm md:text-base">Begin een gesprek om je offerte op te bouwen.</p>
+            <p className="italic mt-2 text-sm md:text-base">"Ik wil een offerte maken voor Mauvestraat 43"</p>
           </div>
         )}
         

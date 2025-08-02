@@ -6,12 +6,43 @@ import TopBar from './components/TopBar';
 import LoginForm from './components/LoginForm';
 import SessionSidebar from './components/SessionSidebar';
 
-// Session management functions
-const SESSIONS_STORAGE_KEY = 'ks-offerte-sessions';
+// Session management functions with user-specific storage
+const CURRENT_USER_STORAGE_KEY = 'ks-offerte-current-user';
 
-const loadSavedSessions = (): SavedSession[] => {
+const getCurrentUser = (): User | null => {
   try {
-    const saved = localStorage.getItem(SESSIONS_STORAGE_KEY);
+    const saved = localStorage.getItem(CURRENT_USER_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.error('Error loading current user:', error);
+  }
+  return null;
+};
+
+const saveCurrentUser = (user: User | null) => {
+  try {
+    if (user) {
+      localStorage.setItem(CURRENT_USER_STORAGE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(CURRENT_USER_STORAGE_KEY);
+    }
+  } catch (error) {
+    console.error('Error saving current user:', error);
+  }
+};
+
+const getUserSessionsKey = (userEmail: string): string => {
+  return `ks-offerte-sessions-${userEmail}`;
+};
+
+const loadSavedSessions = (userEmail?: string): SavedSession[] => {
+  if (!userEmail) return [];
+  
+  try {
+    const userSessionsKey = getUserSessionsKey(userEmail);
+    const saved = localStorage.getItem(userSessionsKey);
     if (saved) {
       const sessions = JSON.parse(saved);
       // Convert date strings back to Date objects for sessions AND messages
@@ -31,9 +62,12 @@ const loadSavedSessions = (): SavedSession[] => {
   return [];
 };
 
-const saveSessions = (sessions: SavedSession[]) => {
+const saveSessions = (sessions: SavedSession[], userEmail?: string) => {
+  if (!userEmail) return;
+  
   try {
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+    const userSessionsKey = getUserSessionsKey(userEmail);
+    localStorage.setItem(userSessionsKey, JSON.stringify(sessions));
   } catch (error) {
     console.error('Error saving sessions:', error);
   }
@@ -65,7 +99,8 @@ function App() {
   }, []);
 
   const [state, setState] = useState<AppState>(() => {
-    const savedSessions = loadSavedSessions();
+    const currentUser = getCurrentUser();
+    const savedSessions = loadSavedSessions(currentUser?.email);
     return {
       messages: [],
       sessionId: uuidv4(),
@@ -73,7 +108,7 @@ function App() {
       offertePreview: '',
       isLoading: false,
       error: null,
-      currentUser: null,
+      currentUser,
       streamingMessage: null,
       isStreaming: false,
       cancelPolling: undefined,
@@ -83,6 +118,7 @@ function App() {
   });
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Auto-save session when messages change
   useEffect(() => {
@@ -102,7 +138,7 @@ function App() {
           updatedAt: new Date()
         };
         
-        const savedSessions = loadSavedSessions();
+        const savedSessions = loadSavedSessions(state.currentUser?.email);
         const existingIndex = savedSessions.findIndex(s => s.id === state.sessionId);
         
         if (existingIndex >= 0) {
@@ -116,7 +152,7 @@ function App() {
         // Sort by most recent first
         savedSessions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
         
-        saveSessions(savedSessions);
+        saveSessions(savedSessions, state.currentUser?.email);
         
         setState(prev => ({
           ...prev,
@@ -129,14 +165,24 @@ function App() {
   }, [state.messages, state.offertePreview, state.sessionId, state.currentSessionName, state.uploadedFiles, pdfUrl, state.currentUser]);
 
   const handleLogin = (user: User) => {
+    // Save user to localStorage
+    saveCurrentUser(user);
+    
+    // Load user-specific sessions
+    const userSessions = loadSavedSessions(user.email);
+    
     setState(prev => ({
       ...prev,
       currentUser: user,
+      savedSessions: userSessions,
+      currentSessionName: generateSessionName(userSessions),
     }));
   };
 
   const handleLogout = () => {
-    const savedSessions = loadSavedSessions();
+    // Clear user from localStorage
+    saveCurrentUser(null);
+    
     setState({
       messages: [],
       sessionId: uuidv4(),
@@ -148,8 +194,8 @@ function App() {
       streamingMessage: null,
       isStreaming: false,
       cancelPolling: undefined,
-      savedSessions,
-      currentSessionName: generateSessionName(savedSessions),
+      savedSessions: [],
+      currentSessionName: generateSessionName([]),
     });
     setPdfUrl(null);
   };
@@ -166,7 +212,7 @@ function App() {
     
     // Reset frontend state
     setState(prev => {
-      const updatedSavedSessions = loadSavedSessions();
+      const updatedSavedSessions = loadSavedSessions(prev.currentUser?.email);
       return {
         ...prev,
         messages: [],
@@ -202,7 +248,7 @@ function App() {
       updatedAt: new Date()
     };
     
-    const savedSessions = loadSavedSessions();
+    const savedSessions = loadSavedSessions(state.currentUser?.email);
     const existingIndex = savedSessions.findIndex(s => s.id === state.sessionId);
     
     if (existingIndex >= 0) {
@@ -216,7 +262,7 @@ function App() {
     // Sort by most recent first
     savedSessions.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
     
-    saveSessions(savedSessions);
+    saveSessions(savedSessions, state.currentUser?.email);
     
     setState(prev => ({
       ...prev,
@@ -228,7 +274,7 @@ function App() {
     // Save current session first
     saveCurrentSession();
     
-    const savedSessions = loadSavedSessions();
+    const savedSessions = loadSavedSessions(state.currentUser?.email);
     const sessionToLoad = savedSessions.find(s => s.id === sessionId);
     
     if (sessionToLoad) {
@@ -250,13 +296,13 @@ function App() {
   };
 
   const updateSessionName = (sessionId: string, newName: string) => {
-    const savedSessions = loadSavedSessions();
+    const savedSessions = loadSavedSessions(state.currentUser?.email);
     const sessionIndex = savedSessions.findIndex(s => s.id === sessionId);
     
     if (sessionIndex >= 0) {
       savedSessions[sessionIndex].name = newName;
       savedSessions[sessionIndex].updatedAt = new Date();
-      saveSessions(savedSessions);
+      saveSessions(savedSessions, state.currentUser?.email);
       
       setState(prev => ({
         ...prev,
@@ -267,8 +313,8 @@ function App() {
   };
 
   const deleteSession = (sessionId: string) => {
-    const savedSessions = loadSavedSessions().filter(s => s.id !== sessionId);
-    saveSessions(savedSessions);
+    const savedSessions = loadSavedSessions(state.currentUser?.email).filter(s => s.id !== sessionId);
+    saveSessions(savedSessions, state.currentUser?.email);
     
     setState(prev => ({
       ...prev,
@@ -857,28 +903,48 @@ function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-ks-light-green">
+    <div className="h-screen flex flex-col bg-ks-light-green relative">
       {/* Top Bar */}
       <TopBar 
         onNewOfferte={startNewOfferte} 
         currentUser={state.currentUser}
         onLogout={handleLogout}
+        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        isSidebarOpen={isSidebarOpen}
       />
       
-      {/* Main Content - Sidebar + Chat */}
-      <div className="flex-1 flex min-h-0">
-        {/* Session Sidebar */}
-        <SessionSidebar
-          sessions={state.savedSessions}
-          currentSessionId={state.sessionId}
-          currentSessionName={state.currentSessionName}
-          onLoadSession={loadSession}
-          onUpdateSessionName={updateSessionName}
-          onDeleteSession={deleteSession}
-        />
+      {/* Main Content - Mobile Responsive */}
+      <div className="flex-1 flex min-h-0 relative">
+        {/* Mobile Sidebar Overlay */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
         
-        {/* Chat Interface */}
-        <div className="flex-1 flex flex-col">
+        {/* Session Sidebar - Hidden on mobile, overlay when open */}
+        <div className={`
+          fixed md:relative top-0 left-0 h-full z-50 md:z-auto
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          md:block
+        `}>
+          <SessionSidebar
+            sessions={state.savedSessions}
+            currentSessionId={state.sessionId}
+            currentSessionName={state.currentSessionName}
+            onLoadSession={(sessionId) => {
+              loadSession(sessionId);
+              setIsSidebarOpen(false); // Close sidebar on mobile after selection
+            }}
+            onUpdateSessionName={updateSessionName}
+            onDeleteSession={deleteSession}
+          />
+        </div>
+        
+        {/* Chat Interface - Full width on mobile */}
+        <div className="flex-1 flex flex-col w-full md:w-auto">
           <ChatInterface
             messages={state.messages}
             isLoading={state.isLoading}
@@ -891,15 +957,15 @@ function App() {
         </div>
       </div>
       
-      {/* Bottom Bar */}
-      <div className="bg-white border-t border-gray-200 p-4 flex justify-between items-center">
-        <div className="text-sm text-gray-600">
+      {/* Bottom Bar - Mobile Responsive */}
+      <div className="bg-white border-t border-gray-200 p-3 md:p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+        <div className="text-xs md:text-sm text-gray-600 order-2 sm:order-1">
           {state.currentSessionName} • {state.messages.length} bericht{state.messages.length !== 1 ? 'en' : ''}
         </div>
         <button
           onClick={openPDF}
           disabled={!pdfUrl}
-          className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+          className={`px-4 md:px-6 py-2 rounded-lg font-medium transition-colors text-sm md:text-base touch-manipulation order-1 sm:order-2 ${
             pdfUrl
               ? 'bg-ks-green text-white hover:bg-green-700'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
