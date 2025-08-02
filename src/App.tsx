@@ -904,14 +904,16 @@ function App() {
 
   return (
     <div className="h-screen flex flex-col bg-ks-light-green relative">
-      {/* Top Bar */}
-      <TopBar 
-        onNewOfferte={startNewOfferte} 
-        currentUser={state.currentUser}
-        onLogout={handleLogout}
-        onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
-        isSidebarOpen={isSidebarOpen}
-      />
+      {/* Top Bar - Sticky */}
+      <div className="sticky top-0 z-30 bg-white">
+        <TopBar 
+          onNewOfferte={startNewOfferte} 
+          currentUser={state.currentUser}
+          onLogout={handleLogout}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          isSidebarOpen={isSidebarOpen}
+        />
+      </div>
       
       {/* Main Content - Mobile Responsive */}
       <div className="flex-1 flex min-h-0 relative">
