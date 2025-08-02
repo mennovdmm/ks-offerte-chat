@@ -100,10 +100,10 @@ jobs:
           chmod +x /tmp/ks-offerte-chat/fix-server-crash.sh
           /tmp/ks-offerte-chat/fix-server-crash.sh
           
-          # FINAL FIX: Hardcode environment variables directly in server.js
-          echo "🚨 FINAL FIX: Hardcoding environment variables..."
-          chmod +x /tmp/ks-offerte-chat/hardcode-env-fix.sh
-          /tmp/ks-offerte-chat/hardcode-env-fix.sh
+          # SAFE FIX: Use PM2 ecosystem file instead of sed/hardcoding
+          echo "🚨 SAFE FIX: Using PM2 ecosystem with environment variables..."
+          chmod +x /tmp/ks-offerte-chat/safe-debug-fix.sh
+          /tmp/ks-offerte-chat/safe-debug-fix.sh
           
           # Test deployment with retries
           for i in {1..5}; do
