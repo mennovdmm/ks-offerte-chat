@@ -1,67 +1,46 @@
-# K&S Offerte Chat - VPS Deployment
+# Getting Started with Create React App
 
-🚀 **Production-ready React + Node.js streaming chat application with Langflow integration**
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## 🌐 Live Application
-- **Website**: https://ai.dehuisraad.com/
-- **API Health**: https://ai.dehuisraad.com/api/health
-- **API Endpoint**: https://ai.dehuisraad.com/api/langflow-stream
+## Available Scripts
 
-## 🏗️ Architecture
+In the project directory, you can run:
 
-### Frontend (React)
-- TypeScript React application with streaming UI
-- Hosted on VPS with Nginx serving static files
-- Real-time streaming animation for AI responses
-- Session management and user authentication
+### `npm start`
 
-### Backend (Node.js + Express)
-- Express API server with Langflow integration
-- **NO TIMEOUT LIMITS** (300s proxy timeout vs Netlify's 25s)
-- SSL-secured with Let's Encrypt certificates
-- PM2 process management for reliability
+Runs the app in the development mode.\
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-### Infrastructure
-- **VPS**: DigitalOcean (206.189.10.152)
-- **Domain**: ai.dehuisraad.com with SSL
-- **Reverse Proxy**: Nginx with extended timeouts
-- **Process Manager**: PM2 with auto-restart
+The page will reload if you make edits.\
+You will also see any lint errors in the console.
 
-## 🚀 Deployment
+### `npm test`
 
-### Automatic GitHub Actions
-```bash
-git push origin main  # → Automatic build & deploy!
-```
+Launches the test runner in the interactive watch mode.\
+See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-## 🔧 Local Development
+### `npm run build`
 
-```bash
-# Install dependencies
-npm install
+Builds the app for production to the `build` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
 
-# Start development server
-npm start
+The build is minified and the filenames include the hashes.\
+Your app is ready to be deployed!
 
-# Build for production
-npm run build
-```
+See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-## 📊 Performance
+### `npm run eject`
 
-### Solved Problems
-- ✅ **Timeout Issues**: No more 25s Netlify limits
-- ✅ **Streaming**: Real-time AI response streaming
-- ✅ **CORS**: Same-domain deployment eliminates CORS issues
-- ✅ **SSL**: Professional HTTPS setup with auto-renewal
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
 
----
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-**🏆 Migration Complete**: Successfully migrated from Netlify Functions (25s timeout) to VPS (300s timeout) with professional domain and SSL setup.
+Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
 
-## 🔄 Auto-Deploy Status
-- ✅ GitHub Actions workflow configured
-- ✅ SSH keys and secrets setup  
-- ✅ VPS deployment target ready
-- 🚀 **Ready for `git push` = instant deploy!**Deploy test
-Deploy test
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+## Learn More
+
+You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+
+To learn React, check out the [React documentation](https://reactjs.org/).

@@ -6,15 +6,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'ks-green': '#2c5530',
-        'ks-light-green': '#f0f6f0',
+        'ks-green': '#22c55e',
+        'ks-light-green': '#f0fdf4',
+        'whatsapp': {
+          green: '#25d366',
+          light: '#dcf8c6',
+          dark: '#128c7e',
+          bg: '#f7f7f7',
+          bubble: '#e5e5ea'
+        }
       },
-      fontFamily: {
-        'georgia': ['Georgia', 'serif'],
-      },
+      screens: {
+        'xs': '475px',
+      }
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
 }

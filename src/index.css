@@ -2,13 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+/* Mobile-first CSS reset */
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding: 0;
+}
+
+html {
+  /* Prevent zoom on input focus on iOS */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: #f7f7f7;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent scroll bounce on iOS */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Touch-friendly button styles */
+.touch-button {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* WhatsApp-style message bubbles */
+.message-bubble {
+  max-width: 85%;
+  word-wrap: break-word;
+  border-radius: 18px;
+  padding: 12px 16px;
+  position: relative;
+}
+
+.message-user {
+  background: #dcf8c6;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.message-ai {
+  background: white;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Mobile input styling */
+.mobile-input {
+  font-size: 16px; /* Prevent zoom on iOS */
+  border-radius: 24px;
+  background: white;
+  border: 1px solid #e5e5ea;
+}
+
+.mobile-input:focus {
+  outline: none;
+  border-color: #25d366;
+}
+
+/* Safe area handling for iPhone */
+@supports (padding: max(0px)) {
+  .safe-top {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  
+  .safe-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
 }
 
 code {
