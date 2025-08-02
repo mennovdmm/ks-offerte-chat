@@ -39,7 +39,16 @@ app.get('/health', (req, res) => {
 
 // Main chat endpoint - CLEAN AND SIMPLE
 app.post('/api/chat', async (req, res) => {
-  console.log('🚀 MOBILE API: /api/chat endpoint called');
+  await handleChatRequest(req, res, '/api/chat');
+});
+
+// Alternative chat endpoint (for direct access without nginx proxy)
+app.post('/chat', async (req, res) => {
+  await handleChatRequest(req, res, '/chat');
+});
+
+async function handleChatRequest(req, res, endpoint) {
+  console.log(`🚀 MOBILE API: ${endpoint} endpoint called`);
   console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
   
   try {
@@ -120,7 +129,7 @@ app.post('/api/chat', async (req, res) => {
       message: errorMessage
     });
   }
-});
+}
 
 // Catch-all handler for React app
 app.get('*', (req, res) => {
