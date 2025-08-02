@@ -77,7 +77,7 @@ jobs:
           echo "🔧 Checking nginx proxy configuration..."
           if ! grep -q "location /api/" /etc/nginx/sites-available/ai.dehuisraad.com 2>/dev/null; then
             echo "⚠️ Adding missing nginx proxy configuration"
-            sudo bash -c 'cat >> /etc/nginx/sites-available/ai.dehuisraad.com << "EOF"
+            sudo tee -a /etc/nginx/sites-available/ai.dehuisraad.com > /dev/null << 'NGINX_CONFIG'
             
     # API Proxy to VPS streaming server
     location /api/ {
@@ -95,7 +95,7 @@ jobs:
         proxy_read_timeout 300s;
         send_timeout 300s;
     }
-EOF'
+NGINX_CONFIG
             sudo nginx -t && sudo systemctl reload nginx
           else
             echo "✅ Nginx proxy configuration already exists"
