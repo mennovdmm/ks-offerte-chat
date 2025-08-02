@@ -1,0 +1,82 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build React app
+      run: npm run build
+      
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          # Create backup of current site
+          sudo mkdir -p /var/www/backup
+          if [ -d "/var/www/ai.dehuisraad.com" ]; then
+            sudo cp -r /var/www/ai.dehuisraad.com /var/www/backup/ai.dehuisraad.com-$(date +%Y%m%d_%H%M%S)
+          fi
+          
+          # Create web directory if it doesn't exist
+          sudo mkdir -p /var/www/ai.dehuisraad.com
+          sudo chown -R www-data:www-data /var/www/ai.dehuisraad.com
+          
+          # Clone/pull latest code
+          cd /tmp
+          if [ -d "ks-offerte-chat" ]; then
+            cd ks-offerte-chat
+            git pull origin main
+          else
+            git clone https://github.com/mennovdmm/ks-offerte-chat.git
+            cd ks-offerte-chat
+          fi
+          
+          # Install dependencies and build
+          npm ci
+          npm run build
+          
+          # Deploy build to web directory
+          sudo rm -rf /var/www/ai.dehuisraad.com/*
+          sudo cp -r build/* /var/www/ai.dehuisraad.com/
+          sudo chown -R www-data:www-data /var/www/ai.dehuisraad.com
+          
+          # Update backend if needed
+          cd /root/ks-streaming-api
+          pm2 restart ks-streaming-api
+          
+          # Test deployment
+          curl -f https://ai.dehuisraad.com/api/health || exit 1
+          
+          echo "🚀 Deployment successful!"
+    
+    - name: Send deployment notification
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Deployment successful to https://ai.dehuisraad.com"
+        else
+          echo "❌ Deployment failed!"
+          exit 1
+        fi
