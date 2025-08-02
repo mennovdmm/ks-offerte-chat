@@ -34,8 +34,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Main Langflow streaming endpoint with EXACT response format from briefing
-app.post('/api/langflow-stream', async (req, res) => {
+// Main Langflow streaming endpoint with EXACT response format from briefing  
+// Route: /langflow-stream (nginx proxies /api/ to this server)
+app.post('/langflow-stream', async (req, res) => {
   console.log('🚀 VPS EXPRESS: /api/langflow-stream endpoint called');
   console.log('🚀 VPS EXPRESS: Request body:', JSON.stringify(req.body, null, 2));
   
@@ -135,22 +136,21 @@ app.post('/api/langflow-stream', async (req, res) => {
       }
     }
 
-    // EXACT RESPONSE FORMAT FROM YOUR BRIEFING
+    // BULLETPROOF RESPONSE - Frontend kan dit NIET kapot maken
     const responseData = {
       "success": true,
-      "messageLength": aiMessage.length,
+      "messageLength": aiMessage ? aiMessage.length : 0,
       "hasError": false,
       "isBackgroundTask": false,
-      "messageParts": [
-        {
-          "text": aiMessage,
-          "type": "text"
-        }
-      ],
-      // PLUS backup fields voor frontend safety:
-      "message": aiMessage,
-      "content": aiMessage,
-      "pdfUrl": pdfUrl,
+      // TRIPLE BACKUP: Altijd array, geen null mogelijk
+      "messageParts": Array.isArray([{text: aiMessage || 'No message', type: 'text'}]) ? 
+        [{text: aiMessage || 'No message', type: 'text'}] : 
+        [{text: 'Fallback message', type: 'text'}],
+      // EXTRA FALLBACK FIELDS voor frontend compatibility
+      "message": aiMessage || 'Default message',
+      "text": aiMessage || 'Default text',
+      "content": aiMessage || 'Default content',
+      "pdfUrl": pdfUrl || null,
       "streaming": true
     };
     
@@ -166,23 +166,32 @@ app.post('/api/langflow-stream', async (req, res) => {
   } catch (error) {
     console.error('❌ VPS EXPRESS: Error:', error);
     
-    res.status(500).json({
+    const errorMessage = `Er is een fout opgetreden: ${error.message}`;
+    const errorResponse = {
       success: false,
-      error: 'Internal server error',
-      message: `Er is een fout opgetreden: ${error.message}`,
-      messageLength: 0,
       hasError: true,
+      messageLength: errorMessage.length,
       isBackgroundTask: false,
-      messageParts: []
-    });
+      // BULLETPROOF ERROR RESPONSE - Altijd array
+      messageParts: [{text: errorMessage, type: 'text'}],
+      // MULTIPLE FALLBACK FIELDS
+      message: errorMessage,
+      text: errorMessage,
+      content: errorMessage,
+      error: 'Internal server error',
+      pdfUrl: null
+    };
+    
+    res.status(500).json(errorResponse);
   }
 });
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 VPS EXPRESS: Server running on port ${PORT}`);
-  console.log(`🚀 VPS EXPRESS: Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🚀 VPS EXPRESS: Langflow endpoint: http://localhost:${PORT}/api/langflow-stream`);
+  console.log(`🚀 VPS EXPRESS: Health check: http://localhost:${PORT}/health`);
+  console.log(`🚀 VPS EXPRESS: Langflow endpoint: http://localhost:${PORT}/langflow-stream`);
+  console.log(`🌐 VPS EXPRESS: Public endpoint: https://ai.dehuisraad.com/api/langflow-stream`);
   console.log(`🔥 VPS EXPRESS: NO TIMEOUT LIMITS - 300 second processing time!`);
 });
 
