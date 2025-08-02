@@ -568,6 +568,9 @@ function App() {
 
       const endpoint = '/api/langflow-stream';
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -579,7 +582,10 @@ function App() {
           uploadedFiles: files || [],
           currentUser: state.currentUser
         }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
