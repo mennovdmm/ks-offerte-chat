@@ -37,22 +37,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Main chat endpoint - CLEAN AND SIMPLE
+// CRITICAL: Correct endpoint matching frontend calls
 app.post('/api/chat', async (req, res) => {
-  await handleChatRequest(req, res, '/api/chat');
-});
-
-// Alternative chat endpoint (for direct access without nginx proxy)
-app.post('/chat', async (req, res) => {
-  await handleChatRequest(req, res, '/chat');
-});
-
-async function handleChatRequest(req, res, endpoint) {
-  console.log(`🚀 MOBILE API: ${endpoint} endpoint called`);
+  console.log('🚀 MOBILE API: /api/chat endpoint called');
   console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
   
   try {
-    const { message, sessionId } = req.body;
+    const { message, sessionId, uploadedFiles, currentUser } = req.body;
     
     // Validate input
     if (!message || message.trim() === '') {
@@ -65,12 +56,17 @@ async function handleChatRequest(req, res, endpoint) {
     console.log('📤 Calling Langflow API...');
     console.log('🔗 URL:', LANGFLOW_API_URL);
     
-    // Prepare Langflow payload
+    // EXACT working Langflow payload structure from VPS
     const langflowPayload = {
-      input_value: message,
-      output_type: 'chat',
-      input_type: 'chat',
-      session_id: sessionId || 'default-session'
+      input_value: JSON.stringify({
+        messages: message ? [{ content: message, role: 'user' }] : [],
+        sessionId: sessionId || 'default',
+        uploadedFiles: uploadedFiles || [],
+        currentUser: currentUser || null
+      }),
+      input_type: "chat",
+      output_type: "chat",
+      session_id: sessionId || 'default'
     };
 
     // Call Langflow API with hardcoded credentials
@@ -92,44 +88,43 @@ async function handleChatRequest(req, res, endpoint) {
     const langflowData = await langflowResponse.json();
     console.log('✅ Langflow response received');
 
-    // Extract AI message from Langflow response
-    let aiMessage = 'Bedankt voor je bericht. Hoe kan ik je verder helpen?';
-    
-    if (langflowData.outputs && langflowData.outputs.length > 0) {
-      const output = langflowData.outputs[0];
-      
-      if (output.outputs && output.outputs.length > 0) {
-        for (const outputItem of output.outputs) {
-          if (outputItem.messages && outputItem.messages.length > 0) {
-            const firstMessage = outputItem.messages[0];
-            if (firstMessage.message && typeof firstMessage.message === 'string') {
-              aiMessage = firstMessage.message;
-              break;
-            }
-          }
-        }
-      }
+    // Extract message from Langflow response structure - EXACT working path
+    let aiMessage = '';
+    if (langflowData.outputs?.[0]?.outputs?.[0]?.messages?.[0]?.message) {
+      aiMessage = langflowData.outputs[0].outputs[0].messages[0].message;
+    } else {
+      aiMessage = 'AI response extraction failed';
     }
-
-    // Return clean response
-    const response = {
+    
+    // Bulletproof response format for frontend compatibility - EXACT working structure
+    const responseData = {
       success: true,
-      message: aiMessage
+      messageLength: aiMessage.length,
+      hasError: false,
+      isBackgroundTask: false,
+      messageParts: [{text: aiMessage || 'No message', type: 'text'}],
+      message: aiMessage,
+      text: aiMessage,
+      content: aiMessage
     };
     
     console.log('✅ Sending response:', { success: true, messageLength: aiMessage.length });
-    res.json(response);
+    res.json(responseData);
     
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('❌ API Error:', error.message);
     
     const errorMessage = `Er is een fout opgetreden: ${error.message}`;
     res.status(500).json({
       success: false,
-      message: errorMessage
+      hasError: true,
+      messageParts: [{text: errorMessage, type: 'text'}],
+      message: errorMessage,
+      text: errorMessage,
+      content: errorMessage
     });
   }
-}
+});
 
 // Catch-all handler for React app
 app.get('*', (req, res) => {
